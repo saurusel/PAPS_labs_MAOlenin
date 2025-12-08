@@ -1,0 +1,31 @@
+@startuml C4_Context
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(buyer, "Buyer", "Сотрудник компании, который тратит внутренние поинты на мерч")
+Person(content_admin, "Content Admin", "Управляет каталогом товаров и медиа")
+Person(fulfillment_admin, "Fulfillment Admin", "Обрабатывает и выдаёт заказы")
+Person(combo_admin, "Combo Admin", "Совмещает права контент-админа и админа выдачи")
+Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
+Person_Ext(bi_analyst, "BI Analyst", "Строит отчёты и дашборды по продажам мерча")
+
+System(merch_system, "Corporate Merch Store", "Внутрикорпоративный интернет-магазин мерча с оплатой поинтами и самовывозом")
+
+System_Ext(google_sheets, "Google Sheets", "Оперативный dump данных для аналитики")
+System_Ext(bigquery, "Google BigQuery", "Корпоративное хранилище аналитических данных")
+System_Ext(looker, "Looker Studio", "BI-панели и отчёты по мерчу")
+
+Rel(buyer, merch_system, "Просматривает каталог, оформляет заказы, оставляет отзывы", "HTTPS")
+Rel(content_admin, merch_system, "Управляет товарами, медиа и остатками", "HTTPS")
+Rel(fulfillment_admin, merch_system, "Обрабатывает заказы и статусы выдачи", "HTTPS")
+Rel(combo_admin, merch_system, "Выполняет функции контент- и выдача-админа", "HTTPS")
+Rel(super_admin, merch_system, "Управляет пользователями, ролями, аудитом и настройками", "HTTPS")
+
+Rel(merch_system, google_sheets, "Ежедневный экспорт заказов, остатков, леджера и отзывов", "Google Sheets API")
+Rel(google_sheets, bigquery, "Использует dump как источник данных", "ETL / Connected Sheets")
+Rel(bigquery, looker, "Источник данных для дашбордов", "SQL")
+Rel(bi_analyst, looker, "Просматривает дашборды и строит отчёты", "Browser")
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,56 @@
+@startuml C4_Components_Frontend
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(buyer, "Buyer", "Сотрудник компании, который тратит внутренние поинты на мерч")
+Person(content_admin, "Content Admin", "Управляет каталогом товаров и медиа")
+Person(fulfillment_admin, "Fulfillment Admin", "Обрабатывает и выдаёт заказы")
+Person(combo_admin, "Combo Admin", "Совмещает права контент-админа и админа выдачи")
+Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
+
+Container(api_app, "Backend API", "FastAPI, Python", "HTTP API с бизнес-логикой, админкой и интеграциями")
+
+Container_Boundary(frontend_boundary, "Web SPA components") {
+    Component(shell_ui, "Shell and Auth UI", "React, TypeScript", "Каркас приложения, навигация, авторизация и управление сессией")
+    Component(catalog_ui, "Catalog and Product UI", "React, TypeScript", "Каталог, поиск, фильтры, карточка товара и фото")
+    Component(cart_ui, "Cart and Checkout UI", "React, TypeScript", "Корзина и оформление заказа")
+    Component(orders_ui, "My Orders and Reviews UI", "React, TypeScript", "История заказов, статусы и отзывы")
+    Component(admin_users_ui, "Admin Users UI", "React, TypeScript", "Управление пользователями и ролями")
+    Component(admin_catalog_ui, "Admin Catalog UI", "React, TypeScript", "Управление товарами, категориями и медиа")
+    Component(admin_inventory_ui, "Admin Inventory UI", "React, TypeScript", "Просмотр и корректировка остатков, запуск импортов")
+    Component(admin_orders_ui, "Admin Orders UI", "React, TypeScript", "Очередь заказов, изменение статусов, отмена и выдача")
+    Component(admin_imports_exports_ui, "Admin Imports and Exports UI", "React, TypeScript", "Запуск и мониторинг импортов и экспортов")
+    Component(admin_audit_ui, "Admin Audit UI", "React, TypeScript", "Просмотр журнала аудита действий администраторов")
+}
+
+Rel(buyer, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+Rel(buyer, catalog_ui, "Просматривает каталог и карточки товаров", "Browser")
+Rel(buyer, cart_ui, "Формирует корзину и оформляет заказ", "Browser")
+Rel(buyer, orders_ui, "Смотрит статусы заказов и оставляет отзывы", "Browser")
+
+Rel(content_admin, admin_catalog_ui, "Управляет каталогом и медиа", "Browser")
+Rel(content_admin, admin_inventory_ui, "Управляет остатками и импортом", "Browser")
+
+Rel(fulfillment_admin, admin_orders_ui, "Обрабатывает очередь заказов", "Browser")
+
+Rel(combo_admin, admin_catalog_ui, "Комбо-админ: функции контент-админа", "Browser")
+Rel(combo_admin, admin_orders_ui, "Комбо-админ: функции админа выдачи", "Browser")
+
+Rel(super_admin, admin_users_ui, "Управляет пользователями и ролями", "Browser")
+Rel(super_admin, admin_imports_exports_ui, "Управляет импортами и экспортами", "Browser")
+Rel(super_admin, admin_audit_ui, "Просматривает аудит действий администраторов", "Browser")
+
+Rel(shell_ui, api_app, "Авторизация, профиль и роли", "HTTPS")
+Rel(catalog_ui, api_app, "Запросы каталога и карточек товара", "HTTPS")
+Rel(cart_ui, api_app, "Создание заказов и проверка баланса поинтов и остатков", "HTTPS")
+Rel(orders_ui, api_app, "История заказов и управление отзывами", "HTTPS")
+Rel(admin_users_ui, api_app, "CRUD пользователей, ролей и паролей", "HTTPS")
+Rel(admin_catalog_ui, api_app, "CRUD товаров, категорий и медиа", "HTTPS")
+Rel(admin_inventory_ui, api_app, "Просмотр и корректировка остатков, запуск импортов", "HTTPS")
+Rel(admin_orders_ui, api_app, "Изменение статусов и отмена заказов", "HTTPS")
+Rel(admin_imports_exports_ui, api_app, "Запуск и мониторинг импортов и экспортов", "HTTPS")
+Rel(admin_audit_ui, api_app, "Запрос журнала аудита", "HTTPS")
+
+SHOW_LEGEND()
+@enduml
