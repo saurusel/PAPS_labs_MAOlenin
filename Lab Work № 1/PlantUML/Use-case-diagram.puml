@@ -1,0 +1,79 @@
+@startuml UC_MerchStore
+left to right direction
+skinparam packageStyle rectangle
+
+actor "Покупатель" as Buyer
+actor "Контент-администратор" as ContentAdmin
+actor "Администратор выдачи" as FulfillmentAdmin
+actor "Супер-администратор" as SuperAdmin
+actor "Комбо-администратор" as ComboAdmin
+actor "BI-аналитик" as BIAnalyst
+actor "Администратор системы" as Admin
+
+Admin <|-- ContentAdmin
+Admin <|-- FulfillmentAdmin
+Admin <|-- SuperAdmin
+ContentAdmin <|-- ComboAdmin
+FulfillmentAdmin <|-- ComboAdmin
+
+rectangle "Система корпоративного мерч-магазина" as System {
+    usecase "Аутентификация пользователя" as UC_Auth
+    usecase "Просмотр каталога" as UC_Browse
+    usecase "Просмотр карточки товара" as UC_Product
+    usecase "Добавление товара в корзину" as UC_AddCart
+    usecase "Оформление заказа" as UC_PlaceOrder
+    usecase "Отмена своего заказа" as UC_CancelOwn
+    usecase "Оставление отзыва о заказе" as UC_Review
+
+    usecase "Управление товарами и категориями" as UC_ManageProducts
+    usecase "Управление медиафайлами товаров" as UC_Media
+    usecase "Управление остатками товаров" as UC_Stock
+
+    usecase "Обработка заказов" as UC_ProcessOrders
+    usecase "Отмена заказа администратором" as UC_CancelOrder
+    usecase "Подтверждение готовности и выдачи заказа" as UC_CompleteOrder
+
+    usecase "Управление пользователями и ролями" as UC_Users
+    usecase "Запуск импортов данных" as UC_Imports
+    usecase "Запуск экспортов в аналитику" as UC_Exports
+    usecase "Просмотр журнала аудита" as UC_Audit
+
+    usecase "Просмотр аналитических отчётов" as UC_Analytics
+
+    usecase "Проверка остатков и баланса поинтов" as UC_Check
+}
+
+Buyer --> UC_Auth
+Buyer --> UC_Browse
+Buyer --> UC_Product
+Buyer --> UC_AddCart
+Buyer --> UC_PlaceOrder
+Buyer --> UC_CancelOwn
+Buyer --> UC_Review
+
+ContentAdmin --> UC_ManageProducts
+ContentAdmin --> UC_Media
+ContentAdmin --> UC_Stock
+
+FulfillmentAdmin --> UC_ProcessOrders
+
+SuperAdmin --> UC_Users
+SuperAdmin --> UC_Imports
+SuperAdmin --> UC_Exports
+SuperAdmin --> UC_Audit
+
+BIAnalyst --> UC_Analytics
+
+UC_Browse .> UC_Product : <<include>>
+UC_PlaceOrder .> UC_AddCart : <<include>>
+UC_PlaceOrder .> UC_Check : <<include>>
+UC_PlaceOrder .> UC_Auth : <<include>>
+
+UC_ManageProducts .> UC_Media : <<include>>
+
+UC_ProcessOrders .> UC_CancelOrder : <<extend>>
+UC_ProcessOrders .> UC_CompleteOrder : <<extend>>
+
+UC_Exports .> UC_Analytics : <<extend>>
+
+@enduml
