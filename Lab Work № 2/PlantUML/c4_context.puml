@@ -10,22 +10,30 @@ Person(combo_admin, "Combo Admin", "Совмещает права контент
 Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
 Person_Ext(bi_analyst, "BI Analyst", "Строит отчёты и дашборды по продажам мерча")
 
-System(merch_system, "Corporate Merch Store", "Внутрикорпоративный интернет-магазин мерча с оплатой поинтами и самовывозом")
+System(merch_system, "Corporate Merch Store", "Внутренний магазин мерча: покупка за поинты, администрирование каталога/остатков/заказов, аудит и экспорты")
 
 System_Ext(google_sheets, "Google Sheets", "Оперативный dump данных для аналитики")
 System_Ext(bigquery, "Google BigQuery", "Корпоративное хранилище аналитических данных")
 System_Ext(looker, "Looker Studio", "BI-панели и отчёты по мерчу")
 
-Rel(buyer, merch_system, "Просматривает каталог, оформляет заказы, оставляет отзывы", "HTTPS")
-Rel(content_admin, merch_system, "Управляет товарами, медиа и остатками", "HTTPS")
-Rel(fulfillment_admin, merch_system, "Обрабатывает заказы и статусы выдачи", "HTTPS")
-Rel(combo_admin, merch_system, "Выполняет функции контент- и выдача-админа", "HTTPS")
-Rel(super_admin, merch_system, "Управляет пользователями, ролями, аудитом и настройками", "HTTPS")
+System_Ext(sentry, "Sentry", "Мониторинг ошибок фронта и бэка")
+System_Ext(ci_cd, "CI/CD Pipeline", "Автоматический деплой приложений из репозитория")
+System_Ext(backup_storage, "Backup Storage", "Хранилище резервных копий БД")
 
-Rel(merch_system, google_sheets, "Ежедневный экспорт заказов, остатков, леджера и отзывов", "Google Sheets API")
+Rel(buyer, merch_system, "Каталог, корзина, заказы, отзывы")
+Rel(content_admin, merch_system, "Каталог, остатки, медиа, импорты")
+Rel(fulfillment_admin, merch_system, "Очередь заказов и статусы выдачи")
+Rel(combo_admin, merch_system, "Комбо-админ: каталог и выдача")
+Rel(super_admin, merch_system, "Пользователи, роли, импорты/экспорт, аудит, настройки")
+
+Rel(merch_system, google_sheets, "Экспорт данных в листы для аналитики")
 Rel(google_sheets, bigquery, "Использует dump как источник данных", "ETL / Connected Sheets")
 Rel(bigquery, looker, "Источник данных для дашбордов", "SQL")
 Rel(bi_analyst, looker, "Просматривает дашборды и строит отчёты", "Browser")
+
+Rel(merch_system, sentry, "Отправляет ошибки и трассировки", "HTTPS")
+Rel(ci_cd, merch_system, "Деплой приложений", "Git / CI/CD")
+Rel(merch_system, backup_storage, "Резервное копирование БД", "Backup job")
 
 SHOW_LEGEND()
 @enduml

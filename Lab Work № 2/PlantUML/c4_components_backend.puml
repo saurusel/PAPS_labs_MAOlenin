@@ -3,48 +3,86 @@
 
 LAYOUT_LEFT_RIGHT()
 
-System_Boundary(merch_boundary, "Corporate Merch Store") {
-    Container(api_app, "Backend API", "FastAPI, Python", "HTTP API с бизнес-логикой, админкой и интеграциями")
-    ContainerDb(db, "Relational Database", "PostgreSQL", "Хранит пользователей, товары, заказы, леджер поинтов, отзывы, аудиты")
-    Container(redis, "Cache and Jobs", "Redis", "Кэширование остатков, сессии и очередь фоновых задач")
-    System_Ext(google_sheets, "Google Sheets", "Сервис для аналитики и отчётности")
+Container(web_app, "Web App", "React, TypeScript, SPA", "Единое приложение. Интерфейс покупателя (каталог, корзина, заказы) и Админ-панель (пользователи, остатки, аудит)")
+Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
 
-    Container_Boundary(api_boundary, "Backend API components") {
-        Component(auth_module, "Auth module", "FastAPI, Python", "Аутентификация, авторизация, управление пользователями и ролями")
-        Component(catalog_module, "Catalog module", "FastAPI, Python", "Каталог товаров, категории, карточки товара и поиск")
-        Component(inventory_module, "Inventory module", "FastAPI, Python", "Учёт остатков и предупреждение о низком остатке")
-        Component(orders_module, "Orders module", "FastAPI, Python", "Создание заказов, статусы и процесс выдачи")
-        Component(ledger_module, "Ledger module", "FastAPI, Python", "Учёт баланса поинтов и операций пополнения/списания")
-        Component(reviews_module, "Reviews module", "FastAPI, Python", "Отзывы, рейтинги и модерация отзывов")
-        Component(admin_module, "Admin module", "FastAPI, Python", "Админские API для пользователей, ролей, заказов и настроек")
-        Component(imports_module, "Imports module", "FastAPI, Python", "Импорт пользователей, остатков и поинтов из CSV")
-        Component(exports_module, "Exports module", "FastAPI, Python", "Экспорт данных в Google Sheets и ручной запуск экспорта")
-        Component(audit_module, "Audit module", "FastAPI, Python", "Аудит действий администраторов и ключевых операций")
-    }
+ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
+Container(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
+Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
+
+System_Ext(sentry, "Sentry", "Мониторинг ошибок фронта и бэка")
+System_Ext(ci_cd, "CI/CD Pipeline", "Автоматический деплой приложений из репозитория")
+
+Container_Boundary(api_app, "Backend API") {
+
+    Component(api_routes, "HTTP API (routers)", "FastAPI, Python", "REST/JSON API: каталог, заказы, профиль, админские операции")
+
+    Component(auth_module, "Auth module", "FastAPI, Python", "Авторизация, профиль, роли и права доступа")
+    Component(users_roles_module, "Users & Roles module", "FastAPI, Python", "Управление пользователями, ролями и настройками доступа")
+    Component(catalog_module, "Catalog module", "FastAPI, Python", "Каталог товаров, категории, карточки товара и медиа")
+    Component(inventory_module, "Inventory module", "FastAPI, Python", "Остатки, корректировки, импорт остатков")
+    Component(orders_module, "Orders module", "FastAPI, Python", "Корзина/оформление заказа, статусы, отмена и выдача")
+    Component(ledger_module, "Ledger module", "FastAPI, Python", "Баланс поинтов и операции пополнения/списания")
+    Component(reviews_module, "Reviews module", "FastAPI, Python", "Отзывы и рейтинги")
+    Component(imports_module, "Imports module", "FastAPI, Python", "Импорты (пользователи/остатки/поинты), статусы и аудит импортов")
+    Component(exports_module, "Exports module", "FastAPI, Python", "Экспорт: запуск задач экспорта и статус экспорта")
+    Component(audit_module, "Audit module", "FastAPI, Python", "Журнал аудита админских действий и ключевых операций")
+
+    Component(persistence, "Persistence Layer", "Python", "Доступ к PostgreSQL (репозитории/ORM)")
+    Component(cache_sessions, "Cache & Sessions", "Python", "Сессии, кэш остатков, публикация задач в Redis")
+    Component(media_gateway, "Media Gateway", "Python", "Работа с S3-хранилищем медиа (загрузка/чтение)")
+    Component(job_orchestrator, "Job Orchestrator", "Python", "Публикация и оркестрация фоновых задач через Redis/cron")
+    Component(observability, "Observability", "Sentry SDK", "Отправка ошибок и трассировок Backend API")
 }
 
-Rel(auth_module, db, "CRUD пользователей, ролей, учёт аутентификации", "SQL")
-Rel(catalog_module, db, "Читает и обновляет товары, категории и медиа", "SQL")
-Rel(inventory_module, db, "Читает и обновляет остатки по SKU", "SQL")
-Rel(orders_module, db, "Создаёт и обновляет заказы и позиции заказа", "SQL")
-Rel(ledger_module, db, "Записывает движения по леджеру поинтов", "SQL")
-Rel(reviews_module, db, "Читает и записывает отзывы и рейтинги", "SQL")
-Rel(imports_module, db, "Записывает результаты импортов", "SQL")
-Rel(exports_module, db, "Читает данные заказов, остатков, леджера и отзывов", "SQL")
-Rel(audit_module, db, "Записывает аудит действий администраторов", "SQL")
+Rel(web_app, api_routes, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
 
-Rel(orders_module, inventory_module, "Проверяет и списывает остатки при оформлении заказов")
-Rel(orders_module, ledger_module, "Создаёт записи леджера при списании и возврате поинтов")
-Rel(exports_module, google_sheets, "Создаёт строки в листах Orders, OrderItems, Stock, Ledger, Reviews", "Google Sheets API")
-Rel(imports_module, redis, "Публикует задачи на обработку больших импортов", "Redis protocol")
-Rel(exports_module, redis, "Получает задания на экспорт в фоне", "Redis protocol")
+Rel(persistence, db, "Читает и записывает бизнес-данные", "SQL")
+Rel(cache_sessions, redis, "Кэш остатков, сессии, публикация задач", "Redis protocol")
+Rel(media_gateway, file_storage, "Загружает и читает изображения товаров", "S3 API")
+Rel(job_orchestrator, export_worker, "Публикует и оркестрирует фоновые задачи через Redis/cron", "async")
 
-Rel(admin_module, auth_module, "Управляет пользователями и ролями через API")
-Rel(admin_module, catalog_module, "Управляет каталогом и медиа")
-Rel(admin_module, orders_module, "Управляет статусами и отменой заказов")
-Rel(admin_module, imports_module, "Запускает импорты и смотрит статус")
-Rel(admin_module, exports_module, "Запускает экспорты и смотрит статус")
-Rel(admin_module, audit_module, "Просматривает аудит действий администраторов")
+Rel(observability, sentry, "Отправляет ошибки и трассировки", "HTTPS")
+Rel(ci_cd, api_app, "Деплой новых версий Backend API", "Git / CI/CD")
+
+Rel(api_routes, auth_module, "Авторизация/профиль")
+Rel(api_routes, users_roles_module, "Пользователи и роли")
+Rel(api_routes, catalog_module, "Каталог/карточки/медиа")
+Rel(api_routes, inventory_module, "Остатки/корректировки")
+Rel(api_routes, orders_module, "Заказы/статусы/выдача")
+Rel(api_routes, ledger_module, "Баланс поинтов")
+Rel(api_routes, reviews_module, "Отзывы")
+Rel(api_routes, imports_module, "Импорты")
+Rel(api_routes, exports_module, "Экспорт")
+Rel(api_routes, audit_module, "Аудит")
+
+Rel(auth_module, cache_sessions, "Сессии и кэш авторизации")
+Rel(users_roles_module, persistence, "Читает и записывает пользователей и роли")
+Rel(users_roles_module, audit_module, "Пишет события аудита")
+
+Rel(catalog_module, persistence, "Читает и записывает товары, категории")
+Rel(catalog_module, media_gateway, "Управляет медиа товара")
+Rel(catalog_module, audit_module, "Пишет события аудита")
+
+Rel(inventory_module, persistence, "Читает и записывает остатки")
+Rel(inventory_module, cache_sessions, "Обновляет кэш остатков")
+Rel(inventory_module, audit_module, "Пишет события аудита")
+
+Rel(orders_module, persistence, "Читает и записывает заказы")
+Rel(orders_module, inventory_module, "Проверяет и списывает остатки")
+Rel(orders_module, ledger_module, "Списывает/возвращает поинты")
+Rel(orders_module, audit_module, "Пишет события аудита")
+
+Rel(ledger_module, persistence, "Читает и записывает леджер поинтов")
+Rel(reviews_module, persistence, "Читает и записывает отзывы")
+
+Rel(imports_module, persistence, "Пишет результаты импортов")
+Rel(imports_module, cache_sessions, "Публикует задачи обработки импортов")
+
+Rel(exports_module, job_orchestrator, "Запускает экспортные задачи")
+Rel(exports_module, persistence, "Читает данные для подготовки экспорта")
+    
+Rel(audit_module, persistence, "Читает и записывает аудит")
 
 SHOW_LEGEND()
 @enduml

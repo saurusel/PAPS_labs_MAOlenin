@@ -1,72 +1,92 @@
-@startuml C4_Containers
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+@startuml C4_Components_Backend
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
 LAYOUT_LEFT_RIGHT()
 
-Person(buyer, "Buyer", "Сотрудник компании, который тратит внутренние поинты на мерч")
-Person(content_admin, "Content Admin", "Управляет каталогом товаров и медиа")
-Person(fulfillment_admin, "Fulfillment Admin", "Обрабатывает и выдаёт заказы")
-Person(combo_admin, "Combo Admin", "Совмещает права контент-админа и админа выдачи")
-Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
-Person_Ext(bi_analyst, "BI Analyst", "Строит отчёты и дашборды по продажам мерча")
+' Внешние относительно Backend API блоки (как в C4_Containers)
+Container(web_app, "Web App", "React, TypeScript, SPA", "Единое приложение. Интерфейс покупателя (каталог, корзина, заказы) и Админ-панель (пользователи, остатки, аудит)")
+Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
 
-System_Boundary(merch_boundary, "Corporate Merch Store") {
-
-    Container(customer_web, "Customer Web App", "React, TypeScript, PWA", "Интерфейс покупателя: каталог, корзина, мои заказы, отзывы")
-
-    Container(admin_web, "Admin Web App", "React, TypeScript", "Админ-панель: пользователи, каталог, остатки, заказы, импорты/экспорт, аудит")
-
-    Container(api_app, "Backend API", "FastAPI, Python", "HTTP API с бизнес-логикой, админкой и интеграциями")
-
-    Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
-
-    ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
-
-    Container(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
-
-    Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
-}
-
-System_Ext(google_sheets, "Google Sheets", "Оперативный dump данных для аналитики")
-System_Ext(bigquery, "Google BigQuery", "Корпоративное хранилище аналитических данных")
-System_Ext(looker, "Looker Studio", "BI-панели и отчёты по мерчу")
+ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
+Container(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
+Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
 
 System_Ext(sentry, "Sentry", "Мониторинг ошибок фронта и бэка")
 System_Ext(ci_cd, "CI/CD Pipeline", "Автоматический деплой приложений из репозитория")
-System_Ext(backup_storage, "Backup Storage", "Хранилище резервных копий БД")
 
-Rel(buyer, customer_web, "Каталог, корзина, заказы, отзывы", "HTTPS")
-Rel(content_admin, admin_web, "Каталог, остатки, медиа, импорты", "HTTPS")
-Rel(fulfillment_admin, admin_web, "Очередь заказов и статусы выдачи", "HTTPS")
-Rel(combo_admin, admin_web, "Комбо-админ: каталог и выдача", "HTTPS")
-Rel(super_admin, admin_web, "Пользователи, роли, импорты/экспорт, аудит, настройки", "HTTPS")
+' Единственная boundary: Backend API
+Container_Boundary(api_app, "Backend API") {
+    Component(api_routes, "HTTP API (routers)", "FastAPI, Python", "REST/JSON API: каталог, заказы, профиль, админские операции")
 
-Rel(customer_web, api_app, "REST/JSON: каталог, заказы, мой профиль", "HTTPS")
-Rel(admin_web, api_app, "REST/JSON: админские операции", "HTTPS")
+    Component(auth_module, "Auth module", "FastAPI, Python", "Авторизация, профиль, роли и права доступа")
+    Component(users_roles_module, "Users & Roles module", "FastAPI, Python", "Управление пользователями и ролями")
+    Component(catalog_module, "Catalog module", "FastAPI, Python", "Каталог товаров, категории, карточки товара и медиа")
+    Component(inventory_module, "Inventory module", "FastAPI, Python", "Остатки, корректировки, кэш остатков")
+    Component(orders_module, "Orders module", "FastAPI, Python", "Оформление заказов, статусы, отмена и выдача")
+    Component(ledger_module, "Ledger module", "FastAPI, Python", "Баланс поинтов и операции пополнения/списания")
+    Component(reviews_module, "Reviews module", "FastAPI, Python", "Отзывы и рейтинги")
+    Component(imports_module, "Imports module", "FastAPI, Python", "Импорты и статусы импортов")
+    Component(exports_module, "Exports module", "FastAPI, Python", "Экспорт и постановка задач экспорта/авто-закрытия")
+
+    Component(persistence, "Persistence Layer", "Python", "Доступ к PostgreSQL (репозитории/ORM)")
+    Component(redis_gateway, "Redis Gateway", "Python", "Кэш остатков, сессии и очередь фоновых задач")
+    Component(media_gateway, "Media Gateway", "Python", "Загрузка и чтение изображений товаров")
+    Component(observability, "Observability", "Sentry SDK", "Отправка ошибок и трассировок Backend API")
+}
+
+' =========================
+' СВЯЗИ Backend API — СТРОГО КАК В C4_Containers (тексты и протоколы 1:1)
+' =========================
+
+Rel(web_app, api_app, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
 
 Rel(api_app, db, "Читает и записывает бизнес-данные", "SQL")
 Rel(api_app, redis, "Кэш остатков, сессии, публикация задач", "Redis protocol")
 Rel(api_app, file_storage, "Загружает и читает изображения товаров", "S3 API")
 Rel(api_app, export_worker, "Публикует и оркестрирует фоновые задачи через Redis/cron", "async")
 
-Rel(export_worker, db, "Читает изменения заказов, остатков, леджера и отзывов", "SQL")
-Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
-Rel(export_worker, google_sheets, "Записывает строки в листы Orders/OrderItems/Stock/Ledger/Reviews", "Google Sheets API")
-
-Rel(google_sheets, bigquery, "Использует dump как источник данных", "ETL / Connected Sheets")
-Rel(bigquery, looker, "Источник данных для дашбордов", "SQL")
-Rel(bi_analyst, looker, "Просматривает дашборды и строит отчёты", "Browser")
-
-Rel(customer_web, sentry, "Отправляет фронтовые ошибки", "HTTPS")
-Rel(admin_web, sentry, "Отправляет фронтовые ошибки", "HTTPS")
 Rel(api_app, sentry, "Отправляет ошибки и трассировки", "HTTPS")
-Rel(export_worker, sentry, "Отправляет ошибки фоновых задач", "HTTPS")
-
-Rel(db, backup_storage, "Ежедневные резервные копии БД", "Backup job")
-
 Rel(ci_cd, api_app, "Деплой новых версий Backend API", "Git / CI/CD")
-Rel(ci_cd, customer_web, "Деплой Customer Web App", "Git / CI/CD")
-Rel(ci_cd, admin_web, "Деплой Admin Web App", "Git / CI/CD")
+
+' =========================
+' ДЕТАЛИЗАЦИЯ (не заменяет контейнерные связи, а раскрывает их)
+' =========================
+
+' Роутинг запросов на доменные модули
+Rel(api_routes, auth_module, "Авторизация, профиль и роли")
+Rel(api_routes, users_roles_module, "Пользователи и роли")
+Rel(api_routes, catalog_module, "Каталог и карточки товара")
+Rel(api_routes, inventory_module, "Остатки")
+Rel(api_routes, orders_module, "Заказы и статусы")
+Rel(api_routes, ledger_module, "Поинты и леджер")
+Rel(api_routes, reviews_module, "Отзывы")
+Rel(api_routes, imports_module, "Импорты")
+Rel(api_routes, exports_module, "Экспорт")
+
+' Доменные модули используют инфраструктуру
+Rel(auth_module, redis_gateway, "Сессии и кэш авторизации")
+Rel(users_roles_module, persistence, "Читает и записывает пользователей и роли")
+
+Rel(catalog_module, persistence, "Читает и записывает товары и категории")
+Rel(catalog_module, media_gateway, "Управляет медиа товара")
+
+Rel(inventory_module, persistence, "Читает и записывает остатки")
+Rel(inventory_module, redis_gateway, "Обновляет кэш остатков")
+
+Rel(orders_module, persistence, "Читает и записывает заказы")
+Rel(orders_module, inventory_module, "Проверяет и списывает остатки")
+Rel(orders_module, ledger_module, "Списывает/возвращает поинты")
+
+Rel(ledger_module, persistence, "Читает и записывает леджер поинтов")
+Rel(reviews_module, persistence, "Читает и записывает отзывы")
+Rel(imports_module, persistence, "Записывает результаты импортов")
+
+' Экспортные задачи через Redis (как ты попросил)
+Rel(exports_module, redis_gateway, "Публикует задания экспорта и авто-закрытия")
+Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
+
+' Ошибки в Sentry (детализация контейнерной связи api_app -> sentry)
+Rel(observability, sentry, "Отправляет ошибки и трассировки", "HTTPS")
 
 SHOW_LEGEND()
 @enduml
