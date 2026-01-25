@@ -16,8 +16,6 @@ System_Ext(google_sheets, "Google Sheets", "Оперативный dump данн
 System_Ext(bigquery, "Google BigQuery", "Корпоративное хранилище аналитических данных")
 System_Ext(looker, "Looker Studio", "BI-панели и отчёты по мерчу")
 
-System_Ext(sentry, "Sentry", "Мониторинг ошибок фронта и бэка")
-System_Ext(ci_cd, "CI/CD Pipeline", "Автоматический деплой приложений из репозитория")
 System_Ext(backup_storage, "Backup Storage", "Хранилище резервных копий БД")
 
 Rel(buyer, merch_system, "Каталог, корзина, заказы, отзывы")
@@ -31,8 +29,6 @@ Rel(google_sheets, bigquery, "Использует dump как источник 
 Rel(bigquery, looker, "Источник данных для дашбордов", "SQL")
 Rel(bi_analyst, looker, "Просматривает дашборды и строит отчёты", "Browser")
 
-Rel(merch_system, sentry, "Отправляет ошибки и трассировки", "HTTPS")
-Rel(ci_cd, merch_system, "Деплой приложений", "Git / CI/CD")
 Rel(merch_system, backup_storage, "Резервное копирование БД", "Backup job")
 
 SHOW_LEGEND()

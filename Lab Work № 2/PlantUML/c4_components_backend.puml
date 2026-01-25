@@ -7,11 +7,8 @@ Container(web_app, "Web App", "React, TypeScript, SPA", "Единое прило
 Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
 
 ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
-Container(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
+ContainerDb(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
 Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
-
-System_Ext(sentry, "Sentry", "Мониторинг ошибок фронта и бэка")
-System_Ext(ci_cd, "CI/CD Pipeline", "Автоматический деплой приложений из репозитория")
 
 Container_Boundary(api_app, "Backend API") {
 
@@ -32,7 +29,6 @@ Container_Boundary(api_app, "Backend API") {
     Component(cache_sessions, "Cache & Sessions", "Python", "Сессии, кэш остатков, публикация задач в Redis")
     Component(media_gateway, "Media Gateway", "Python", "Работа с S3-хранилищем медиа (загрузка/чтение)")
     Component(job_orchestrator, "Job Orchestrator", "Python", "Публикация и оркестрация фоновых задач через Redis/cron")
-    Component(observability, "Observability", "Sentry SDK", "Отправка ошибок и трассировок Backend API")
 }
 
 Rel(web_app, api_routes, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
@@ -42,8 +38,7 @@ Rel(cache_sessions, redis, "Кэш остатков, сессии, публик�
 Rel(media_gateway, file_storage, "Загружает и читает изображения товаров", "S3 API")
 Rel(job_orchestrator, export_worker, "Публикует и оркестрирует фоновые задачи через Redis/cron", "async")
 
-Rel(observability, sentry, "Отправляет ошибки и трассировки", "HTTPS")
-Rel(ci_cd, api_app, "Деплой новых версий Backend API", "Git / CI/CD")
+Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
 
 Rel(api_routes, auth_module, "Авторизация/профиль")
 Rel(api_routes, users_roles_module, "Пользователи и роли")
@@ -56,33 +51,23 @@ Rel(api_routes, imports_module, "Импорты")
 Rel(api_routes, exports_module, "Экспорт")
 Rel(api_routes, audit_module, "Аудит")
 
-Rel(auth_module, cache_sessions, "Сессии и кэш авторизации")
+Rel(auth_module, persistence, "Читает пользователей/роли/права доступа")
 Rel(users_roles_module, persistence, "Читает и записывает пользователей и роли")
-Rel(users_roles_module, audit_module, "Пишет события аудита")
-
 Rel(catalog_module, persistence, "Читает и записывает товары, категории")
-Rel(catalog_module, media_gateway, "Управляет медиа товара")
-Rel(catalog_module, audit_module, "Пишет события аудита")
-
 Rel(inventory_module, persistence, "Читает и записывает остатки")
-Rel(inventory_module, cache_sessions, "Обновляет кэш остатков")
-Rel(inventory_module, audit_module, "Пишет события аудита")
-
 Rel(orders_module, persistence, "Читает и записывает заказы")
-Rel(orders_module, inventory_module, "Проверяет и списывает остатки")
-Rel(orders_module, ledger_module, "Списывает/возвращает поинты")
-Rel(orders_module, audit_module, "Пишет события аудита")
-
 Rel(ledger_module, persistence, "Читает и записывает леджер поинтов")
 Rel(reviews_module, persistence, "Читает и записывает отзывы")
-
 Rel(imports_module, persistence, "Пишет результаты импортов")
-Rel(imports_module, cache_sessions, "Публикует задачи обработки импортов")
-
-Rel(exports_module, job_orchestrator, "Запускает экспортные задачи")
 Rel(exports_module, persistence, "Читает данные для подготовки экспорта")
-    
 Rel(audit_module, persistence, "Читает и записывает аудит")
+
+Rel(auth_module, cache_sessions, "Сессии и кэш авторизации")
+Rel(inventory_module, cache_sessions, "Обновляет кэш остатков")
+Rel(catalog_module, media_gateway, "Управляет медиа товара")
+Rel(exports_module, job_orchestrator, "Запускает экспортные задачи")
+
+Rel(job_orchestrator, redis, "Публикует задачи в очередь", "Redis protocol")
 
 SHOW_LEGEND()
 @enduml
