@@ -1,0 +1,61 @@
+@startuml C4_Components_Frontend
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(buyer, "Buyer", "Сотрудник компании, который тратит внутренние поинты на мерч")
+Person(content_admin, "Content Admin", "Управляет каталогом товаров и медиа")
+Person(fulfillment_admin, "Fulfillment Admin", "Обрабатывает и выдаёт заказы")
+Person(combo_admin, "Combo Admin", "Совмещает права контент-админа и админа выдачи")
+Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
+
+Container(api_app, "Backend API", "FastAPI, Python", "HTTP API с бизнес-логикой, админкой и интеграциями")
+
+Container_Boundary(web_app, "Web App") {
+    Component(shell_ui, "Shell and Auth UI", "React, TypeScript", "Каркас приложения, навигация, авторизация и управление сессией")
+    Component(catalog_ui, "Catalog and Product UI", "React, TypeScript", "Каталог, поиск, фильтры, карточка товара и фото")
+    Component(cart_ui, "Cart and Checkout UI", "React, TypeScript", "Корзина и оформление заказа")
+    Component(orders_ui, "My Orders and Reviews UI", "React, TypeScript", "История заказов, статусы и отзывы")
+
+    Component(admin_users_ui, "Admin Users UI", "React, TypeScript", "Управление пользователями и ролями")
+    Component(admin_catalog_ui, "Admin Catalog UI", "React, TypeScript", "Управление товарами, категориями и медиа")
+    Component(admin_inventory_ui, "Admin Inventory UI", "React, TypeScript", "Просмотр и корректировка остатков, запуск импортов")
+    Component(admin_orders_ui, "Admin Orders UI", "React, TypeScript", "Очередь заказов, изменение статусов, отмена и выдача")
+    Component(admin_imports_exports_ui, "Admin Imports and Exports UI", "React, TypeScript", "Запуск и мониторинг импортов и экспортов")
+    Component(admin_audit_ui, "Admin Audit UI", "React, TypeScript", "Просмотр журнала аудита действий администраторов")
+
+    Component(api_client, "API Client", "TypeScript", "Единый HTTP-клиент для вызовов Backend API (общие и админские операции)")
+}
+
+Rel(buyer, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+Rel(content_admin, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+Rel(fulfillment_admin, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+Rel(combo_admin, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+Rel(super_admin, shell_ui, "Входит в систему и использует общий интерфейс", "Browser")
+
+Rel(shell_ui, catalog_ui, "Открывает экран каталога и карточек товаров (RBAC)")
+Rel(shell_ui, cart_ui, "Открывает экран корзины и оформления заказа (RBAC)")
+Rel(shell_ui, orders_ui, "Открывает экран заказов и отзывов (RBAC)")
+
+Rel(shell_ui, admin_users_ui, "Открывает экран управления пользователями и ролями (RBAC)")
+Rel(shell_ui, admin_catalog_ui, "Открывает экран управления каталогом и медиа (RBAC)")
+Rel(shell_ui, admin_inventory_ui, "Открывает экран остатков и импортов (RBAC)")
+Rel(shell_ui, admin_orders_ui, "Открывает экран заказов/выдачи (RBAC)")
+Rel(shell_ui, admin_imports_exports_ui, "Открывает экран импортов и экспортов (RBAC)")
+Rel(shell_ui, admin_audit_ui, "Открывает экран аудита (RBAC)")
+
+Rel(shell_ui, api_client, "Авторизация, профиль и роли")
+Rel(catalog_ui, api_client, "Запросы каталога и карточек товара")
+Rel(cart_ui, api_client, "Создание заказов и проверка баланса поинтов и остатков")
+Rel(orders_ui, api_client, "История заказов и управление отзывами")
+Rel(admin_users_ui, api_client, "CRUD пользователей, ролей и паролей")
+Rel(admin_catalog_ui, api_client, "CRUD товаров, категорий и медиа")
+Rel(admin_inventory_ui, api_client, "Просмотр и корректировка остатков, запуск импортов")
+Rel(admin_orders_ui, api_client, "Изменение статусов и отмена заказов")
+Rel(admin_imports_exports_ui, api_client, "Запуск и мониторинг импортов и экспортов")
+Rel(admin_audit_ui, api_client, "Запрос журнала аудита")
+
+Rel(api_client, api_app, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
+
+SHOW_LEGEND()
+@enduml
