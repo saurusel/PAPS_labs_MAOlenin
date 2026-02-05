@@ -21,6 +21,8 @@ System_Boundary(merch_boundary, "Corporate Merch Store") {
 
 System_Ext(google_sheets, "Google Sheets", "Оперативный dump данных для аналитики")
 
+System_Ext(backup_storage, "Backup Storage", "Хранилище резервных копий БД")
+
 Rel(buyer, web_app, "Каталог, корзина, заказы, отзывы", "HTTPS")
 Rel(content_admin, web_app, "Каталог, остатки, медиа, импорты", "HTTPS")
 Rel(fulfillment_admin, web_app, "Очередь заказов и статусы выдачи", "HTTPS")
@@ -37,6 +39,7 @@ Rel(api_app, export_worker, "Публикует и оркестрирует фо
 Rel(export_worker, db, "Читает изменения заказов, остатков, леджера и отзывов", "SQL")
 Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
 Rel(export_worker, google_sheets, "Записывает строки в листы Orders/OrderItems/Stock/Ledger/Reviews", "Google Sheets API")
+Rel(db, backup_storage, "Ежедневные резервные копии БД", "SQL")
 
 SHOW_LEGEND()
 @enduml
