@@ -10,11 +10,12 @@ actor "Комбо-администратор" as ComboAdmin
 actor "BI-аналитик" as BIAnalyst
 actor "Администратор системы" as Admin
 
-Admin <|-- ContentAdmin
-Admin <|-- FulfillmentAdmin
-Admin <|-- SuperAdmin
-ContentAdmin <|-- ComboAdmin
-FulfillmentAdmin <|-- ComboAdmin
+' Исправленное наследование: стрелки указывают на родителя
+ContentAdmin --|> Admin
+FulfillmentAdmin --|> Admin
+SuperAdmin --|> Admin
+ComboAdmin --|> ContentAdmin
+ComboAdmin --|> FulfillmentAdmin
 
 rectangle "Система корпоративного мерч-магазина" as System {
     usecase "Аутентификация пользователя" as UC_Auth
@@ -39,41 +40,41 @@ rectangle "Система корпоративного мерч-магазина
     usecase "Просмотр журнала аудита" as UC_Audit
 
     usecase "Просмотр аналитических отчётов" as UC_Analytics
-
     usecase "Проверка остатков и баланса поинтов" as UC_Check
 }
 
-Buyer --> UC_Auth
-Buyer --> UC_Browse
-Buyer --> UC_Product
-Buyer --> UC_AddCart
-Buyer --> UC_PlaceOrder
-Buyer --> UC_CancelOwn
-Buyer --> UC_Review
+' Без стрелок
+Buyer -- UC_Auth
+Buyer -- UC_Browse
+Buyer -- UC_Product
+Buyer -- UC_AddCart
+Buyer -- UC_PlaceOrder
+Buyer -- UC_CancelOwn
+Buyer -- UC_Review
 
-ContentAdmin --> UC_ManageProducts
-ContentAdmin --> UC_Media
-ContentAdmin --> UC_Stock
+ContentAdmin -- UC_ManageProducts
+ContentAdmin -- UC_Media
+ContentAdmin -- UC_Stock
 
-FulfillmentAdmin --> UC_ProcessOrders
+FulfillmentAdmin -- UC_ProcessOrders
 
-SuperAdmin --> UC_Users
-SuperAdmin --> UC_Imports
-SuperAdmin --> UC_Exports
-SuperAdmin --> UC_Audit
+SuperAdmin -- UC_Users
+SuperAdmin -- UC_Imports
+SuperAdmin -- UC_Exports
+SuperAdmin -- UC_Audit
 
-BIAnalyst --> UC_Analytics
+BIAnalyst -- UC_Analytics
 
-UC_Browse .> UC_Product : <<include>>
-UC_PlaceOrder .> UC_AddCart : <<include>>
-UC_PlaceOrder .> UC_Check : <<include>>
-UC_PlaceOrder .> UC_Auth : <<include>>
+UC_Browse ..> UC_Product : <<include>>
+UC_PlaceOrder ..> UC_AddCart : <<include>>
+UC_PlaceOrder ..> UC_Check : <<include>>
+UC_PlaceOrder ..> UC_Auth : <<include>>
 
-UC_ManageProducts .> UC_Media : <<include>>
+UC_ManageProducts ..> UC_Media : <<include>>
 
-UC_ProcessOrders .> UC_CancelOrder : <<extend>>
-UC_ProcessOrders .> UC_CompleteOrder : <<extend>>
+UC_CancelOrder ..> UC_ProcessOrders : <<extend>>
+UC_CompleteOrder ..> UC_ProcessOrders : <<extend>>
 
-UC_Exports .> UC_Analytics : <<extend>>
+UC_Exports ..> UC_Analytics : <<extend>>
 
 @enduml
