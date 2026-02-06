@@ -1,0 +1,160 @@
+@startuml DB_Purchase_Process
+skinparam style strictuml
+hide circle
+hide methods
+
+' =========================
+' AUTH / USERS
+' =========================
+class User {
+  +id: UUID
+  +email: string
+  +full_name: string
+  +points_balance: int
+  +points_reserved: int
+  +created_at: datetime
+}
+
+class Role {
+  +id: UUID
+  +code: string
+  +name: string
+}
+
+class UserRole {
+  +user_id: UUID
+  +role_id: UUID
+}
+
+User "1" -- "0..*" UserRole
+Role "1" -- "0..*" UserRole
+
+' =========================
+' CATALOG
+' =========================
+class Product {
+  +id: UUID
+  +sku: string
+  +name: string
+  +description: text
+  +price_points: int
+  +is_active: bool
+  +created_at: datetime
+}
+
+class ProductMedia {
+  +id: UUID
+  +product_id: UUID
+  +storage_key: string
+  +cdn_url: string
+  +sort_order: int
+  +created_at: datetime
+}
+
+Product "1" -- "0..*" ProductMedia
+
+' =========================
+' STOCK
+' =========================
+class StockItem {
+  +id: UUID
+  +product_id: UUID
+  +available_qty: int
+  +reserved_qty: int
+  +updated_at: datetime
+}
+
+Product "1" -- "1" StockItem
+
+class StockReservation {
+  +id: UUID
+  +order_item_id: UUID
+  +product_id: UUID
+  +qty: int
+  +status: enum(ACTIVE|CONSUMED|RELEASED)
+  +created_at: datetime
+}
+
+Product "1" -- "0..*" StockReservation
+
+' =========================
+' CART
+' =========================
+class Cart {
+  +id: UUID
+  +user_id: UUID
+  +status: enum(ACTIVE|CHECKED_OUT)
+  +created_at: datetime
+}
+
+class CartItem {
+  +id: UUID
+  +cart_id: UUID
+  +product_id: UUID
+  +qty: int
+  +created_at: datetime
+}
+
+User "1" -- "0..1" Cart
+Cart "1" -- "0..*" CartItem
+Product "1" -- "0..*" CartItem
+
+' =========================
+' ORDERS
+' =========================
+class Order {
+  +id: UUID
+  +user_id: UUID
+  +status: enum(CREATED|READY_FOR_ISSUE|ISSUED|CANCELLED)
+  +total_points: int
+  +created_at: datetime
+  +updated_at: datetime
+}
+
+class OrderItem {
+  +id: UUID
+  +order_id: UUID
+  +product_id: UUID
+  +qty: int
+  +price_points_snapshot: int
+}
+
+User "1" -- "0..*" Order
+Order "1" -- "1..*" OrderItem
+Product "1" -- "0..*" OrderItem
+
+OrderItem "1" -- "1" StockReservation
+
+' =========================
+' LEDGER (POINTS)
+' =========================
+class LedgerEntry {
+  +id: UUID
+  +user_id: UUID
+  +order_id: UUID?      ' nullable for manual adjustments
+  +type: enum(HOLD|RELEASE|SPEND|ADJUST)
+  +amount_points: int   ' negative for SPEND, positive for RELEASE/ADJUST
+  +created_at: datetime
+}
+
+User "1" -- "0..*" LedgerEntry
+Order "1" -- "0..*" LedgerEntry
+
+' =========================
+' REVIEWS
+' =========================
+class Review {
+  +id: UUID
+  +user_id: UUID
+  +product_id: UUID
+  +order_id: UUID?
+  +rating: int
+  +comment: text
+  +created_at: datetime
+}
+
+User "1" -- "0..*" Review
+Product "1" -- "0..*" Review
+Order "1" -- "0..*" Review
+
+@enduml

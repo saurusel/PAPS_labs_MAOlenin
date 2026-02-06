@@ -1,0 +1,147 @@
+@startuml Sequence_Purchase_Full
+
+skinparam ParticipantPadding 18
+skinparam BoxPadding 12
+
+actor Buyer as Buyer
+participant "Web App" as WebApp
+participant "API Client" as ApiClient
+
+participant "Backend API (routers)" as Routers
+participant "Catalog module" as Catalog
+participant "Orders module" as Orders
+participant "Inventory module" as Inventory
+participant "Ledger module" as Ledger
+participant "Persistence Layer (SQLAlchemy)" as Persistence
+database "PostgreSQL" as DB
+
+== Browse catalog / product ==
+Buyer -> WebApp: Open catalog
+WebApp -> ApiClient: GET /products
+ApiClient -> Routers: GET /products
+Routers -> Catalog: listProducts()
+Catalog -> Persistence: query products
+Persistence -> DB: SELECT products...
+DB --> Persistence: rows
+Persistence --> Catalog: products
+Catalog --> Routers: products
+Routers --> ApiClient: 200 products
+ApiClient --> WebApp: products
+WebApp --> Buyer: Show catalog
+
+Buyer -> WebApp: Open product card
+WebApp -> ApiClient: GET /products/{id}
+ApiClient -> Routers: GET /products/{id}
+Routers -> Catalog: getProduct(id)
+Catalog -> Persistence: query product+media+stock
+Persistence -> DB: SELECT product/media/stock...
+DB --> Persistence: rows
+Persistence --> Catalog: product details
+Catalog --> Routers: product details
+Routers --> ApiClient: 200 product
+ApiClient --> WebApp: product
+WebApp --> Buyer: Show product card
+
+== Add to cart ==
+Buyer -> WebApp: Add to cart (product, qty)
+WebApp -> ApiClient: POST /cart/items
+ApiClient -> Routers: POST /cart/items
+Routers -> Orders: addToCart(user, product, qty)
+Orders -> Persistence: upsert cart + item
+Persistence -> DB: INSERT/UPDATE cart, cart_item
+DB --> Persistence: ok
+Orders --> Routers: cart updated
+Routers --> ApiClient: 200 cart
+ApiClient --> WebApp: cart
+WebApp --> Buyer: Cart updated
+
+== Create order (reserve stock + hold points) ==
+Buyer -> WebApp: Checkout (place order)
+WebApp -> ApiClient: POST /orders
+ApiClient -> Routers: POST /orders
+Routers -> Orders: placeOrder(user)
+
+Orders -> Persistence: load cart items
+Persistence -> DB: SELECT cart/cart_items...
+DB --> Persistence: cart rows
+Persistence --> Orders: cart items
+
+Orders -> Inventory: reserveStock(items)
+Inventory -> Persistence: SELECT stock FOR UPDATE
+Persistence -> DB: SELECT stock FOR UPDATE...
+DB --> Persistence: stock rows
+Persistence --> Inventory: stock
+
+alt Insufficient stock
+  Inventory --> Orders: fail (not enough stock)
+  Orders --> Routers: 409 Not enough stock
+  Routers --> ApiClient: 409 Not enough stock
+  ApiClient --> WebApp: error
+  WebApp --> Buyer: Show error
+else Stock OK
+  Inventory -> Persistence: INSERT reservations; UPDATE stock.reserved_qty
+  Persistence -> DB: INSERT reservations; UPDATE stock
+  DB --> Persistence: ok
+  Inventory --> Orders: reserved
+end
+
+Orders -> Ledger: holdPoints(user, total_points)
+Ledger -> Persistence: SELECT user FOR UPDATE
+Persistence -> DB: SELECT user FOR UPDATE...
+DB --> Persistence: user row
+
+alt Insufficient points (available = balance - reserved)
+  Ledger --> Orders: fail (not enough points)
+  Orders -> Inventory: releaseStockReservations()
+  Inventory -> Persistence: UPDATE reservations=RELEASED; UPDATE stock.reserved_qty
+  Persistence -> DB: UPDATE reservations; UPDATE stock
+  DB --> Persistence: ok
+  Orders --> Routers: 409 Not enough points
+  Routers --> ApiClient: 409 Not enough points
+  ApiClient --> WebApp: error
+  WebApp --> Buyer: Show error
+else Points OK
+  Ledger -> Persistence: UPDATE user.points_reserved; INSERT ledger_entry(HOLD)
+  Persistence -> DB: UPDATE user; INSERT ledger_entry
+  DB --> Persistence: ok
+  Ledger --> Orders: held
+end
+
+Orders -> Persistence: INSERT order/order_items; clear cart
+Persistence -> DB: INSERT order/order_items; DELETE cart_items
+DB --> Persistence: ok
+Orders --> Routers: 201 Order created
+Routers --> ApiClient: 201 order
+ApiClient --> WebApp: order created
+WebApp --> Buyer: Show confirmation
+
+== Issue order (consume reservation + spend points) ==
+actor "Fulfillment Admin" as Fulfill
+
+Fulfill -> WebApp: Select order for issue
+WebApp -> ApiClient: POST /orders/{id}/issue
+ApiClient -> Routers: POST /orders/{id}/issue
+Routers -> Orders: issueOrder(order_id)
+
+Orders -> Inventory: consumeReservations(order_id)
+Inventory -> Persistence: UPDATE reservations=CONSUMED; UPDATE stock (available--, reserved--)
+Persistence -> DB: UPDATE reservations; UPDATE stock
+DB --> Persistence: ok
+Inventory --> Orders: ok
+
+Orders -> Ledger: spendHeldPoints(order_id)
+Ledger -> Persistence: SELECT user FOR UPDATE; UPDATE points_balance & points_reserved; INSERT ledger_entry(SPEND)
+Persistence -> DB: SELECT user; UPDATE user; INSERT ledger_entry
+DB --> Persistence: ok
+Ledger --> Orders: ok
+
+Orders -> Persistence: UPDATE order status=ISSUED
+Persistence -> DB: UPDATE order
+DB --> Persistence: ok
+
+Orders --> Routers: 200 Issued
+Routers --> ApiClient: 200 Issued
+ApiClient --> WebApp: success
+WebApp --> Fulfill: Order issued
+
+@enduml
