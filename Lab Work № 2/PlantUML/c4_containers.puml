@@ -1,0 +1,45 @@
+@startuml C4_Containers
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(buyer, "Buyer", "Сотрудник компании, который тратит внутренние поинты на мерч")
+Person(content_admin, "Content Admin", "Управляет каталогом товаров и медиа")
+Person(fulfillment_admin, "Fulfillment Admin", "Обрабатывает и выдаёт заказы")
+Person(combo_admin, "Combo Admin", "Совмещает права контент-админа и админа выдачи")
+Person(super_admin, "Super Admin", "Управляет пользователями, ролями и системными настройками")
+
+System_Boundary(merch_boundary, "Corporate Merch Store") {
+    Container(web_app, "Web App", "React, TypeScript, SPA", "Единое приложение. Интерфейс покупателя (каталог, корзина, заказы) и Админ-панель (пользователи, остатки, аудит)")
+    Container(api_app, "Backend API", "FastAPI, Python", "HTTP API с бизнес-логикой, админкой и интеграциями")
+    Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
+
+    ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
+    ContainerDb(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
+    Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
+}
+
+System_Ext(google_sheets, "Google Sheets", "Оперативный dump данных для аналитики")
+
+System_Ext(backup_storage, "Backup Storage", "Хранилище резервных копий БД")
+
+Rel(buyer, web_app, "Каталог, корзина, заказы, отзывы", "HTTPS")
+Rel(content_admin, web_app, "Каталог, остатки, медиа, импорты", "HTTPS")
+Rel(fulfillment_admin, web_app, "Очередь заказов и статусы выдачи", "HTTPS")
+Rel(combo_admin, web_app, "Комбо-админ: каталог и выдача", "HTTPS")
+Rel(super_admin, web_app, "Пользователи, роли, импорты/экспорт, аудит, настройки", "HTTPS")
+
+Rel(web_app, api_app, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
+
+Rel(api_app, db, "Читает и записывает бизнес-данные", "SQL")
+Rel(api_app, redis, "Кэш остатков, сессии, публикация задач", "Redis protocol")
+Rel(api_app, file_storage, "Загружает и читает изображения товаров", "S3 API")
+Rel(api_app, export_worker, "Публикует и оркестрирует фоновые задачи через Redis/cron", "async")
+
+Rel(export_worker, db, "Читает изменения заказов, остатков, леджера и отзывов", "SQL")
+Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
+Rel(export_worker, google_sheets, "Записывает строки в листы Orders/OrderItems/Stock/Ledger/Reviews", "Google Sheets API")
+Rel(db, backup_storage, "Ежедневные резервные копии БД", "SQL")
+
+SHOW_LEGEND()
+@enduml

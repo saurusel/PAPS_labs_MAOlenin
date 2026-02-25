@@ -1,0 +1,73 @@
+@startuml C4_Components_Backend
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Container(web_app, "Web App", "React, TypeScript, SPA", "Единое приложение. Интерфейс покупателя (каталог, корзина, заказы) и Админ-панель (пользователи, остатки, аудит)")
+Container(export_worker, "Export Worker", "Python background jobs", "Фоновые задачи экспорта в Google Sheets и авто-закрытия заказов")
+
+ContainerDb(db, "Relational Database", "PostgreSQL", "Пользователи, роли, товары, остатки, заказы, леджер, отзывы, импорты, аудит")
+ContainerDb(redis, "Cache and Jobs", "Redis", "Кэш остатков, сессии и очередь фоновых задач")
+Container(file_storage, "File Storage", "S3-compatible storage + CDN", "Изображения товаров и статические файлы")
+
+Container_Boundary(api_app, "Backend API") {
+
+    Component(api_routes, "HTTP API (routers)", "FastAPI, Python", "REST/JSON API: каталог, заказы, профиль, админские операции")
+
+    Component(auth_module, "Auth module", "FastAPI, Python", "Авторизация, профиль, роли и права доступа")
+    Component(users_roles_module, "Users & Roles module", "FastAPI, Python", "Управление пользователями, ролями и настройками доступа")
+    Component(catalog_module, "Catalog module", "FastAPI, Python", "Каталог товаров, категории, карточки товара и медиа")
+    Component(inventory_module, "Inventory module", "FastAPI, Python", "Остатки, корректировки, импорт остатков")
+    Component(orders_module, "Orders module", "FastAPI, Python", "Корзина/оформление заказа, статусы, отмена и выдача")
+    Component(ledger_module, "Ledger module", "FastAPI, Python", "Баланс поинтов и операции пополнения/списания")
+    Component(reviews_module, "Reviews module", "FastAPI, Python", "Отзывы и рейтинги")
+    Component(imports_module, "Imports module", "FastAPI, Python", "Импорты (пользователи/остатки/поинты), статусы и аудит импортов")
+    Component(exports_module, "Exports module", "FastAPI, Python", "Экспорт: запуск задач экспорта и статус экспорта")
+    Component(audit_module, "Audit module", "FastAPI, Python", "Журнал аудита админских действий и ключевых операций")
+
+    Component(persistence, "Persistence Layer", "Python", "Доступ к PostgreSQL (репозитории/ORM)")
+    Component(cache_sessions, "Cache & Sessions", "Python", "Сессии, кэш остатков, публикация задач в Redis")
+    Component(media_gateway, "Media Gateway", "Python", "Работа с S3-хранилищем медиа (загрузка/чтение)")
+    Component(job_orchestrator, "Job Orchestrator", "Python", "Публикация и оркестрация фоновых задач через Redis/cron")
+}
+
+Rel(web_app, api_routes, "REST/JSON: каталог, заказы, профиль, админские операции", "HTTPS")
+
+Rel(persistence, db, "Читает и записывает бизнес-данные", "SQL")
+Rel(cache_sessions, redis, "Кэш остатков, сессии, публикация задач", "Redis protocol")
+Rel(media_gateway, file_storage, "Загружает и читает изображения товаров", "S3 API")
+Rel(job_orchestrator, export_worker, "Публикует и оркестрирует фоновые задачи через Redis/cron", "async")
+
+Rel(export_worker, redis, "Получает задания экспорта и авто-закрытия", "Redis protocol")
+
+Rel(api_routes, auth_module, "Авторизация/профиль")
+Rel(api_routes, users_roles_module, "Пользователи и роли")
+Rel(api_routes, catalog_module, "Каталог/карточки/медиа")
+Rel(api_routes, inventory_module, "Остатки/корректировки")
+Rel(api_routes, orders_module, "Заказы/статусы/выдача")
+Rel(api_routes, ledger_module, "Баланс поинтов")
+Rel(api_routes, reviews_module, "Отзывы")
+Rel(api_routes, imports_module, "Импорты")
+Rel(api_routes, exports_module, "Экспорт")
+Rel(api_routes, audit_module, "Аудит")
+
+Rel(auth_module, persistence, "Читает пользователей/роли/права доступа")
+Rel(users_roles_module, persistence, "Читает и записывает пользователей и роли")
+Rel(catalog_module, persistence, "Читает и записывает товары, категории")
+Rel(inventory_module, persistence, "Читает и записывает остатки")
+Rel(orders_module, persistence, "Читает и записывает заказы")
+Rel(ledger_module, persistence, "Читает и записывает леджер поинтов")
+Rel(reviews_module, persistence, "Читает и записывает отзывы")
+Rel(imports_module, persistence, "Пишет результаты импортов")
+Rel(exports_module, persistence, "Читает данные для подготовки экспорта")
+Rel(audit_module, persistence, "Читает и записывает аудит")
+
+Rel(auth_module, cache_sessions, "Сессии и кэш авторизации")
+Rel(inventory_module, cache_sessions, "Обновляет кэш остатков")
+Rel(catalog_module, media_gateway, "Управляет медиа товара")
+Rel(exports_module, job_orchestrator, "Запускает экспортные задачи")
+
+Rel(job_orchestrator, redis, "Публикует задачи в очередь", "Redis protocol")
+
+SHOW_LEGEND()
+@enduml
