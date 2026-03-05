@@ -1,0 +1,19 @@
+@startuml C4_Containers_Lab5
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(user, "User", "Пользователь магазина мерча (buyer/content_admin/fulfillment_admin)")
+
+System_Boundary(s1, "Corporate Merch Store (Lab 5)") {
+  Container(client, "Client", "HTML + JS (Nginx)", "Минимальный web-клиент: создание демо-товара и просмотр каталога")
+  Container(api, "Backend API", "FastAPI (Python)", "REST API: товары и заказы")
+  ContainerDb(db, "Database", "PostgreSQL", "Хранение товаров, вариантов, заказов и балансов поинтов")
+}
+
+Rel(user, client, "Открывает страницу", "HTTP")
+Rel(client, api, "Вызывает API", "HTTP/JSON")
+Rel(api, db, "Читает/пишет данные", "SQL")
+
+SHOW_LEGEND()
+@enduml
