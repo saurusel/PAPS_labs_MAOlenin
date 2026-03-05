@@ -1,0 +1,51 @@
+name: Lab 5 CI
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        defaults:
+            run:
+                working-directory: "Lab Work № 5"
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Build images
+              run: docker compose build
+
+            - name: Start stack
+              run: docker compose up -d
+
+            - name: Wait for API health
+              run: |
+                  for i in {1..40}; do
+                    if curl -fsS "http://127.0.0.1:8000/health" > /dev/null; then
+                      echo "API is ready"
+                      exit 0
+                    fi
+                    sleep 2
+                  done
+                  echo "API did not become ready"
+                  docker compose logs
+                  exit 1
+
+            - name: Install Newman
+              run: npm i -g newman
+
+            - name: Run Postman integration tests
+              run: |
+                  newman run "tests/postman/Lab4_Merch_autotests.postman_collection.json" \
+                    -e "tests/postman/Lab4_Local_autotests.postman_environment.json"
+
+            - name: Logs (always)
+              if: always()
+              run: docker compose logs
+
+            - name: Stop stack
+              if: always()
+              run: docker compose down -v
