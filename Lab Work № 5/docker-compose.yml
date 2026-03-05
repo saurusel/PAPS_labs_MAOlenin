@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: merch
+      POSTGRES_PASSWORD: merch
+      POSTGRES_DB: merchdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    build: ./server
+    environment:
+      DATABASE_URL: postgresql+psycopg2://merch:merch@db:5432/merchdb
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+  client:
+    build: ./client
+    depends_on:
+      - server
+    ports:
+      - "8080:80"
+
+volumes:
+  pgdata:
