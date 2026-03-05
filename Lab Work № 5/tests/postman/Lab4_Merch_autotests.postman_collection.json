@@ -1,0 +1,546 @@
+{
+    "info": {
+        "name": "Lab4 Corporate Merch Store API autotests",
+        "_postman_id": "11111111-1111-1111-1111-111111111111",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "1) POST /api/v1/products (201 Created)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "content_admin" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/products",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"name\":\"Худи черное\",\"description\":\"Тёплое худи\",\"images\":[\"https://example.com/img1.jpg\"],\"variants\":[{\"sku\":\"{{sku}}\",\"size\":\"M\",\"color\":\"black\",\"price_points\":1200,\"stock_total\":10}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "prerequest",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "const sku = 'HD-BLK-M-' + Date.now();",
+                            "pm.environment.set('sku', sku);"
+                        ]
+                    }
+                },
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has id', () => pm.expect(data.id).to.be.a('number'));",
+                            "pm.test('Has variants', () => pm.expect(data.variants).to.be.an('array'));",
+                            "pm.test('SKU matches', () => pm.expect(data.variants[0].sku).to.eql(pm.environment.get('sku')));",
+                            "pm.environment.set('productId', data.id);"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "2) POST /api/v1/products (409 duplicate SKU)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "content_admin" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/products",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"name\":\"Худи черное\",\"description\":\"Тёплое худи\",\"images\":[\"https://example.com/img1.jpg\"],\"variants\":[{\"sku\":\"{{sku}}\",\"size\":\"M\",\"color\":\"black\",\"price_points\":1200,\"stock_total\":10}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
+                            "pm.test('error.code = SKU_EXISTS', () => pm.expect(data.error.code).to.eql('SKU_EXISTS'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "3) GET /api/v1/products (200 OK, not empty)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/products"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
+                            "pm.test('Not empty', () => pm.expect(data.length).to.be.above(0));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "4) GET /api/v1/products?q=__no_such__ (200 empty)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/products?q=__no_such_product__"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
+                            "pm.test('Empty', () => pm.expect(data.length).to.eql(0));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "5) GET /api/v1/products/{{productId}} (200 OK)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/products/{{productId}}"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('id matches', () => pm.expect(String(data.id)).to.eql(String(pm.environment.get('productId'))));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "6) GET /api/v1/products/999999 (404)",
+            "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/products/999999"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 404', () => pm.response.to.have.status(404));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "7) POST /api/v1/orders (201 buyer u1)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"items\":[{\"sku\":\"{{sku}}\",\"qty\":1}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has id', () => pm.expect(data.id).to.be.a('number'));",
+                            "pm.test('status=Новый', () => pm.expect(data.status).to.eql('Новый'));",
+                            "pm.environment.set('orderIdStatus', data.id);"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "8) POST /api/v1/orders (409 insufficient points u2)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u2" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"items\":[{\"sku\":\"{{sku}}\",\"qty\":1000}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 409', () => pm.response.to.have.status(409));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
+                            "pm.test('Message mentions points', () => {",
+                            "  const msg = (data.error?.message || '').toLowerCase();",
+                            "  pm.expect(msg).to.satisfy(m => m.includes('поинт') || m.includes('балл') || m.includes('points') || m.includes('недостат'));",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "9) GET /api/v1/orders (200 buyer u1)",
+            "request": {
+                "method": "GET",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
+                            "pm.test('Has at least 1 order', () => pm.expect(data.length).to.be.above(0));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "10) GET /api/v1/orders (403 content_admin)",
+            "request": {
+                "method": "GET",
+                "header": [{ "key": "X-Role", "value": "content_admin" }],
+                "url": "{{baseUrl}}/api/v1/orders"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "11) PUT /api/v1/orders/{{orderIdStatus}}/status (200 -> На проверке)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    { "key": "X-Role", "value": "fulfillment_admin" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdStatus}}/status",
+                "body": { "mode": "raw", "raw": "{\"status\":\"На проверке\"}" }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('status=На проверке', () => pm.expect(data.status).to.eql('На проверке'));",
+                            "if (data.hasOwnProperty('reserved')) { pm.test('reserved=true', () => pm.expect(data.reserved).to.eql(true)); }"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "12) PUT /api/v1/orders/{{orderIdStatus}}/status (403 buyer)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdStatus}}/status",
+                "body": { "mode": "raw", "raw": "{\"status\":\"На проверке\"}" }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 403', () => pm.response.to.have.status(403));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "13) POST /api/v1/orders (201 buyer u1 for cancel)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"items\":[{\"sku\":\"{{sku}}\",\"qty\":1}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.environment.set('orderIdCancel', data.id);",
+                            "pm.test('status=Новый', () => pm.expect(data.status).to.eql('Новый'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "14) DELETE /api/v1/orders/{{orderIdCancel}} (200 cancel)",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdCancel}}"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('status=Отменен', () => pm.expect(data.status).to.eql('Отменен'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "15) POST /api/v1/orders (201 buyer u1 for cancel-not-allowed)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\"items\":[{\"sku\":\"{{sku}}\",\"qty\":1}]}"
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.environment.set('orderIdLocked', data.id);"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "16) PUT /api/v1/orders/{{orderIdLocked}}/status (200 -> На проверке)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    { "key": "X-Role", "value": "fulfillment_admin" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdLocked}}/status",
+                "body": { "mode": "raw", "raw": "{\"status\":\"На проверке\"}" }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('status=На проверке', () => pm.expect(data.status).to.eql('На проверке'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "17) PUT /api/v1/orders/{{orderIdLocked}}/status (200 -> Сборка)",
+            "request": {
+                "method": "PUT",
+                "header": [
+                    { "key": "X-Role", "value": "fulfillment_admin" },
+                    { "key": "Content-Type", "value": "application/json" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdLocked}}/status",
+                "body": { "mode": "raw", "raw": "{\"status\":\"Сборка\"}" }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('status=Сборка', () => pm.expect(data.status).to.eql('Сборка'));"
+                        ]
+                    }
+                }
+            ]
+        },
+
+        {
+            "name": "18) DELETE /api/v1/orders/{{orderIdLocked}} (400 cancel not allowed)",
+            "request": {
+                "method": "DELETE",
+                "header": [
+                    { "key": "X-Role", "value": "buyer" },
+                    { "key": "X-User-Id", "value": "u1" }
+                ],
+                "url": "{{baseUrl}}/api/v1/orders/{{orderIdLocked}}"
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "type": "text/javascript",
+                        "exec": [
+                            "pm.test('Status 400', () => pm.response.to.have.status(400));",
+                            "pm.test('Response is JSON', () => pm.response.to.be.json);",
+                            "const data = pm.response.json();",
+                            "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
+                            "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
+                            "pm.test('Message mentions cancel', () => {",
+                            "  const msg = (data.error?.message || '').toLowerCase();",
+                            "  pm.expect(msg).to.satisfy(m => m.includes('отмен') || m.includes('cancel'));",
+                            "});"
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
