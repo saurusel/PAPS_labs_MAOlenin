@@ -26,7 +26,7 @@
                     "script": {
                         "type": "text/javascript",
                         "exec": [
-                            "const sku = 'HD-BLK-M-' + Date.now();",
+                            "var sku = 'HD-BLK-M-' + Date.now();",
                             "pm.environment.set('sku', sku);"
                         ]
                     }
@@ -38,7 +38,7 @@
                         "exec": [
                             "pm.test('Status 201', () => pm.response.to.have.status(201));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has id', () => pm.expect(data.id).to.be.a('number'));",
                             "pm.test('Has variants', () => pm.expect(data.variants).to.be.an('array'));",
                             "pm.test('SKU matches', () => pm.expect(data.variants[0].sku).to.eql(pm.environment.get('sku')));",
@@ -72,7 +72,7 @@
                         "exec": [
                             "pm.test('Status 409', () => pm.response.to.have.status(409));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
                             "pm.test('error.code = SKU_EXISTS', () => pm.expect(data.error.code).to.eql('SKU_EXISTS'));"
@@ -98,7 +98,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
                             "pm.test('Not empty', () => pm.expect(data.length).to.be.above(0));"
                         ]
@@ -123,7 +123,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
                             "pm.test('Empty', () => pm.expect(data.length).to.eql(0));"
                         ]
@@ -148,7 +148,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('id matches', () => pm.expect(String(data.id)).to.eql(String(pm.environment.get('productId'))));"
                         ]
                     }
@@ -172,7 +172,7 @@
                         "exec": [
                             "pm.test('Status 404', () => pm.response.to.have.status(404));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
                         ]
@@ -205,7 +205,7 @@
                         "exec": [
                             "pm.test('Status 201', () => pm.response.to.have.status(201));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has id', () => pm.expect(data.id).to.be.a('number'));",
                             "pm.test('status=Новый', () => pm.expect(data.status).to.eql('Новый'));",
                             "pm.environment.set('orderIdStatus', data.id);"
@@ -239,11 +239,11 @@
                         "exec": [
                             "pm.test('Status 409', () => pm.response.to.have.status(409));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
                             "pm.test('Message mentions points', () => {",
-                            "  const msg = (data.error?.message || '').toLowerCase();",
+                            "  var msg = (data.error?.message || '').toLowerCase();",
                             "  pm.expect(msg).to.satisfy(m => m.includes('поинт') || m.includes('балл') || m.includes('points') || m.includes('недостат'));",
                             "});"
                         ]
@@ -271,7 +271,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Array', () => pm.expect(data).to.be.an('array'));",
                             "pm.test('Has at least 1 order', () => pm.expect(data.length).to.be.above(0));"
                         ]
@@ -296,7 +296,7 @@
                         "exec": [
                             "pm.test('Status 403', () => pm.response.to.have.status(403));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
                         ]
@@ -325,7 +325,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('status=На проверке', () => pm.expect(data.status).to.eql('На проверке'));",
                             "if (data.hasOwnProperty('reserved')) { pm.test('reserved=true', () => pm.expect(data.reserved).to.eql(true)); }"
                         ]
@@ -354,7 +354,7 @@
                         "exec": [
                             "pm.test('Status 403', () => pm.response.to.have.status(403));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));"
                         ]
@@ -387,7 +387,7 @@
                         "exec": [
                             "pm.test('Status 201', () => pm.response.to.have.status(201));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.environment.set('orderIdCancel', data.id);",
                             "pm.test('status=Новый', () => pm.expect(data.status).to.eql('Новый'));"
                         ]
@@ -415,7 +415,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('status=Отменен', () => pm.expect(data.status).to.eql('Отменен'));"
                         ]
                     }
@@ -447,7 +447,7 @@
                         "exec": [
                             "pm.test('Status 201', () => pm.response.to.have.status(201));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.environment.set('orderIdLocked', data.id);"
                         ]
                     }
@@ -475,7 +475,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('status=На проверке', () => pm.expect(data.status).to.eql('На проверке'));"
                         ]
                     }
@@ -503,7 +503,7 @@
                         "exec": [
                             "pm.test('Status 200', () => pm.response.to.have.status(200));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('status=Сборка', () => pm.expect(data.status).to.eql('Сборка'));"
                         ]
                     }
@@ -530,11 +530,11 @@
                         "exec": [
                             "pm.test('Status 400', () => pm.response.to.have.status(400));",
                             "pm.test('Response is JSON', () => pm.response.to.be.json);",
-                            "const data = pm.response.json();",
+                            "var data = pm.response.json();",
                             "pm.test('Has error object', () => { pm.expect(data).to.have.property('error'); pm.expect(data.error).to.have.property('message'); });",
                             "pm.test('error.code is string', () => pm.expect(data.error.code).to.be.a('string'));",
                             "pm.test('Message mentions cancel', () => {",
-                            "  const msg = (data.error?.message || '').toLowerCase();",
+                            "  var msg = (data.error?.message || '').toLowerCase();",
                             "  pm.expect(msg).to.satisfy(m => m.includes('отмен') || m.includes('cancel'));",
                             "});"
                         ]
