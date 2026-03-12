@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Corporate Merch Store — Lab 5</title>
+
+        <!-- чтобы не было 404 /favicon.ico -->
+        <link rel="icon" href="data:," />
+
+        <style>
+            :root {
+                --bg: #f6f7fb;
+                --card: #fff;
+                --text: #0f172a;
+                --muted: #64748b;
+                --border: #e5e7eb;
+                --shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+                --primary: #0f172a;
+                --primaryText: #fff;
+                --danger: #b91c1c;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    Segoe UI,
+                    Roboto,
+                    Arial,
+                    sans-serif;
+                background: var(--bg);
+                color: var(--text);
+            }
+
+            .container {
+                max-width: 1200px;
+                margin: 28px auto;
+                padding: 0 16px;
+            }
+            .header {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 16px;
+                margin-bottom: 14px;
+            }
+            h1 {
+                margin: 0;
+                font-size: 28px;
+                line-height: 1.15;
+            }
+            .subtitle {
+                color: var(--muted);
+                margin-top: 6px;
+            }
+
+            .status {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 12px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                background: var(--card);
+                box-shadow: var(--shadow);
+                white-space: nowrap;
+            }
+            .dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                background: #9ca3af;
+            }
+            .dot.ok {
+                background: #16a34a;
+            }
+            .dot.bad {
+                background: #dc2626;
+            }
+            .status small {
+                color: var(--muted);
+            }
+            .btn {
+                cursor: pointer;
+                border: 1px solid var(--border);
+                background: var(--primary);
+                color: var(--primaryText);
+                padding: 10px 12px;
+                border-radius: 10px;
+                font-weight: 600;
+            }
+            .btn:disabled {
+                opacity: 0.55;
+                cursor: not-allowed;
+            }
+            .btn-secondary {
+                background: #fff;
+                color: var(--text);
+            }
+            .btn-danger {
+                background: var(--danger);
+                border-color: var(--danger);
+                color: #fff;
+            }
+
+            .tabs {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin: 14px 0 18px;
+            }
+            .tab {
+                padding: 10px 12px;
+                border-radius: 12px;
+                border: 1px solid var(--border);
+                background: var(--card);
+                color: var(--text);
+                cursor: pointer;
+                font-weight: 700;
+            }
+            .tab.active {
+                background: var(--primary);
+                color: var(--primaryText);
+                border-color: var(--primary);
+            }
+            .tab-panel {
+                display: none;
+            }
+            .tab-panel.active {
+                display: block;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+            @media (max-width: 980px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            .card {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                padding: 16px;
+            }
+            .card h2 {
+                margin: 0 0 10px;
+                font-size: 18px;
+            }
+            .hint {
+                color: var(--muted);
+                font-size: 13px;
+                margin: 6px 0 0;
+            }
+
+            .row {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            @media (max-width: 520px) {
+                .row {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            label {
+                display: block;
+                font-size: 13px;
+                color: var(--muted);
+                margin: 10px 0 6px;
+            }
+            input,
+            select,
+            textarea {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                background: #fff;
+                color: var(--text);
+                outline: none;
+            }
+            textarea {
+                min-height: 120px;
+                resize: vertical;
+            }
+
+            .actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                margin-top: 12px;
+            }
+            .divider {
+                height: 1px;
+                background: var(--border);
+                margin: 14px 0;
+            }
+
+            pre {
+                margin: 0;
+                background: #0b1220;
+                color: #e5e7eb;
+                border-radius: 14px;
+                padding: 12px;
+                overflow: auto;
+                max-height: 360px;
+                font-size: 12px;
+            }
+
+            .log {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+            .log td {
+                padding: 8px 10px;
+                border-bottom: 1px solid var(--border);
+                vertical-align: top;
+            }
+            .badge {
+                display: inline-block;
+                padding: 2px 8px;
+                border-radius: 999px;
+                border: 1px solid var(--border);
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .badge.ok {
+                border-color: #86efac;
+                color: #166534;
+                background: #f0fdf4;
+            }
+            .badge.bad {
+                border-color: #fecaca;
+                color: #7f1d1d;
+                background: #fef2f2;
+            }
+
+            /* Toast */
+            .toast {
+                position: fixed;
+                right: 16px;
+                top: 16px;
+                z-index: 9999;
+                min-width: 260px;
+                max-width: 420px;
+                background: var(--card);
+                border: 1px solid var(--border);
+                box-shadow: var(--shadow);
+                border-radius: 14px;
+                padding: 12px 14px;
+                opacity: 0;
+                transform: translateY(-8px);
+                transition: 0.18s ease;
+                pointer-events: none;
+            }
+            .toast.show {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .toast .t-title {
+                font-weight: 800;
+                margin-bottom: 4px;
+            }
+            .toast .t-text {
+                color: var(--muted);
+                font-size: 13px;
+            }
+            .toast.success {
+                border-color: #86efac;
+            }
+            .toast.error {
+                border-color: #fecaca;
+            }
+        
+            .p-card {
+                border: 1px solid var(--border);
+                border-radius: 14px;
+                padding: 12px;
+                margin-top: 10px;
+                background: #fff;
+            }
+            .p-title {
+                font-weight: 800;
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+            }
+            .p-id {
+                color: var(--muted);
+                font-weight: 700;
+                font-size: 12px;
+            }
+            .p-desc {
+                color: var(--muted);
+                font-size: 13px;
+                margin-top: 4px;
+                margin-bottom: 10px;
+            }
+            .mini-head {
+                display: grid;
+                grid-template-columns: 1.3fr 1fr 0.7fr 0.8fr;
+                gap: 10px;
+                color: var(--muted);
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+            .mini-row {
+                display: grid;
+                grid-template-columns: 1.3fr 1fr 0.7fr 0.8fr;
+                gap: 10px;
+                padding: 8px 10px;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                margin: 6px 0;
+                background: #fafafa;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="header">
+                <div>
+                    <h1>Corporate Merch Store — Lab 5</h1>
+                    <div class="subtitle">
+                        Клиент (Nginx) → Сервер (FastAPI) → БД (PostgreSQL)
+                    </div>
+                    <div class="hint">
+                        Вкладка “Работа” — только нужные действия. Вкладка
+                        “Диагностика” — ответы и лента запросов.
+                    </div>
+                </div>
+
+                <div class="status">
+                    <div id="healthDot" class="dot"></div>
+                    <div>
+                        <div>
+                            <strong>Server health:</strong>
+                            <span id="healthText">—</span>
+                        </div>
+                        <small>Через Nginx прокси</small>
+                    </div>
+                    <button
+                        id="btnHealth"
+                        class="btn btn-secondary"
+                        type="button"
+                    >
+                        Проверить
+                    </button>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="work" type="button">
+                    Работа
+                </button>
+                <button class="tab" data-tab="diag" type="button">
+                    Диагностика
+                </button>
+                <button class="tab" data-tab="help" type="button">
+                    Справка
+                </button>
+            </div>
+
+            <!-- TAB: WORK -->
+            <section id="tab-work" class="tab-panel active">
+                <div class="grid">
+                    <div class="card">
+                        <h2>1) Товары</h2>
+                        <div class="hint">
+                            Создай товар → обнови список → выбери SKU для
+                            заказа.
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Название</label>
+                                <input
+                                    id="pName"
+                                    placeholder="например: Hoodie Black"
+                                />
+                            </div>
+                            <div>
+                                <label>Описание</label>
+                                <input
+                                    id="pDesc"
+                                    placeholder="Demo product for Lab 5"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>SKU (если пусто — сгенерируется)</label>
+                                <input id="pSku" placeholder="HD-BLK-M-123" />
+                            </div>
+                            <div>
+                                <label>Размер</label>
+                                <input id="pSize" placeholder="M" />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Цвет</label>
+                                <input id="pColor" placeholder="Black" />
+                            </div>
+                            <div>
+                                <label>Цена (points)</label>
+                                <input
+                                    id="pPrice"
+                                    type="number"
+                                    min="0"
+                                    value="1000"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>Остаток (stock_total)</label>
+                                <input
+                                    id="pStock"
+                                    type="number"
+                                    min="0"
+                                    value="10"
+                                />
+                            </div>
+                            <div class="actions" style="align-items: end">
+                                <button
+                                    id="btnCreateProduct"
+                                    class="btn"
+                                    type="button"
+                                >
+                                    Создать товар
+                                </button>
+                                <button
+                                    id="btnLoadProducts"
+                                    class="btn btn-secondary"
+                                    type="button"
+                                >
+                                    Обновить список
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="row">
+                            <div>
+                                <label>Поиск по имени (q)</label>
+                                <input
+                                    id="pSearch"
+                                    placeholder="например: hoodie"
+                                />
+                            </div>
+                            <div class="actions" style="align-items: end">
+                                <button
+                                    id="btnSearchProducts"
+                                    class="btn btn-secondary"
+                                    type="button"
+                                >
+                                    Поиск
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div>
+                                <label>SKU для заказа</label>
+                                <select id="skuSelect"></select>
+                            </div>
+                            <div class="actions" style="align-items: end">
+                                <button
+                                    id="btnCopySku"
+                                    class="btn btn-secondary"
+                                    type="button"
+                                >
+                                    Копировать SKU
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="hint" style="margin-top: 10px">
+                            <strong>Список товаров (кратко):</strong>
+                            <div
+                                id="productsShort"
+                                style="margin-top: 6px"
+                            ></div>
+                        </div>
+
+                        <div class="divider"></div>
+                        <div class="hint">
+                            <strong>Каталог:</strong>
+                            <div id="productsList" style="margin-top: 10px"></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>2) Заказы</h2>
+                        <div class="hint">
+                            Создай заказ (buyer) → админ меняет статус
+                            (fulfillment_admin).
+                        </div>
+
+                        <label>User ID (в БД уже есть u1=5000, u2=2000)</label>
+                        <select id="userId">
+                            <option value="u1">u1</option>
+                            <option value="u2">u2</option>
+                        </select>
+
+                        <label>Items (формат: SKU qty, по строкам)</label>
+                        <textarea
+                            id="itemsText"
+                            placeholder="SKU-123 1&#10;SKU-999 2"
+                        ></textarea>
+
+                        <div class="actions">
+                            <button
+                                id="btnCreateOrder"
+                                class="btn"
+                                type="button"
+                            >
+                                Создать заказ
+                            </button>
+                            <button
+                                id="btnLoadOrders"
+                                class="btn btn-secondary"
+                                type="button"
+                            >
+                                Список заказов
+                            </button>
+
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 10px;
+                                    align-items: center;
+                                    flex-wrap: wrap;
+                                "
+                            >
+                                <div style="min-width: 220px">
+                                    <label style="margin: 0 0 6px"
+                                        >Фильтр статуса (необязательно)</label
+                                    >
+                                    <select id="statusFilter">
+                                        <option value="">(любой)</option>
+                                        <option value="Новый">Новый</option>
+                                        <option value="На проверке">
+                                            На проверке
+                                        </option>
+                                        <option value="Сборка">Сборка</option>
+                                        <option value="Готов к выдаче">
+                                            Готов к выдаче
+                                        </option>
+                                        <option value="Завершен">Завершен</option>
+                                        <option value="Отменен">
+                                            Отменен
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <div class="row">
+                            <div>
+                                <label>Order ID</label>
+                                <input
+                                    id="orderId"
+                                    type="number"
+                                    min="1"
+                                    placeholder="например: 1"
+                                />
+                            </div>
+                            <div>
+                                <label>Новый статус</label>
+                                <select id="newStatus">
+                                    <option value="На проверке">На проверке</option>
+                                    <option value="Сборка">Сборка</option>
+                                    <option value="Готов к выдаче">
+                                        Готов к выдаче
+                                    </option>
+                                    <option value="Завершен">Завершен</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <button
+                                id="btnUpdateStatus"
+                                class="btn btn-secondary"
+                                type="button"
+                            >
+                                Обновить статус (admin)
+                            </button>
+                            <button
+                                id="btnCancelOrder"
+                                class="btn btn-danger"
+                                type="button"
+                            >
+                                Отменить заказ
+                            </button>
+                        </div>
+
+                        <div class="hint" style="margin-top: 10px">
+                            Подсказка по переходам: Новый → На проверке → Сборка
+                            → Готов к выдаче → Завершен.<br />
+                            Отмена разрешена только в статусах: Новый, На
+                            проверке.
+                        </div>
+
+                        <div class="divider"></div>
+                        <div>
+                            <div class="hint">
+                                <strong>Список заказов:</strong>
+                            </div>
+                            <div id="ordersList" style="margin-top: 8px"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: DIAG -->
+            <section id="tab-diag" class="tab-panel">
+                <div class="grid">
+                    <div class="card">
+                        <h2>3) Последний ответ сервера</h2>
+                        <div class="hint">
+                            Здесь видно, что вернул API (успех или ошибка).
+                        </div>
+                        <pre id="out">{}</pre>
+                    </div>
+
+                    <div class="card">
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 10px;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <div>
+                                <h2 style="margin: 0">4) Лента действий</h2>
+                                <div class="hint">
+                                    Показывает реальные запросы к API через
+                                    Nginx-прокси.
+                                </div>
+                            </div>
+                            <button
+                                id="btnClearLog"
+                                class="btn btn-secondary"
+                                type="button"
+                            >
+                                Очистить
+                            </button>
+                        </div>
+
+                        <table class="log" id="logTable"></table>
+
+                        <div class="hint" style="margin-top: 10px">
+                            Если “ничего не происходит” — смотри сюда и в
+                            “Последний ответ”.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: HELP -->
+            <section id="tab-help" class="tab-panel">
+                <div class="card">
+                    <h2>5) Быстрый смысл заголовков</h2>
+                    <ul
+                        style="
+                            margin: 10px 0 0;
+                            color: var(--muted);
+                            line-height: 1.6;
+                        "
+                    >
+                        <li>
+                            <strong>Создать товар:</strong> заголовок
+                            <code>X-Role: content_admin</code>
+                        </li>
+                        <li>
+                            <strong>Создать заказ:</strong> заголовки
+                            <code>X-Role: buyer</code> и
+                            <code>X-User-Id: u1</code> (или u2)
+                        </li>
+                        <li>
+                            <strong>Менять статус:</strong> заголовок
+                            <code>X-Role: fulfillment_admin</code>
+                        </li>
+                    </ul>
+
+                    <div class="divider"></div>
+
+                    <div class="hint">
+                        API доступен также напрямую:
+                        <code>http://localhost:8000/docs</code> (или через
+                        клиент: <code>http://localhost:8080/docs</code>)
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="toast" class="toast"></div>
+
+        <script src="app.js"></script>
+    </body>
+</html>
