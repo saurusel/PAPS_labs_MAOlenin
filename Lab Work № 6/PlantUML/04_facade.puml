@@ -1,0 +1,33 @@
+@startuml
+title GoF — Facade
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+class OrdersApi
+class OrderFacade {
+  +create_order()
+  +change_status()
+  +cancel_order()
+}
+
+class ValidationChain
+class RepositoryFactory
+class EventBus
+class InventoryAdapter
+class PointsAdapter
+
+OrdersApi --> OrderFacade
+OrderFacade --> ValidationChain
+OrderFacade --> RepositoryFactory
+OrderFacade --> InventoryAdapter
+OrderFacade --> PointsAdapter
+OrderFacade --> EventBus
+@enduml

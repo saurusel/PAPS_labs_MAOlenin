@@ -1,0 +1,34 @@
+@startuml
+title GoF — Observer
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+class EventBus {
+  +subscribe(event, listener)
+  +publish(event, payload)
+}
+
+interface EventListener {
+  +update(event, payload)
+}
+
+class AuditListener
+class LedgerListener
+class LogListener
+class OrderFacade
+
+EventListener <|.. AuditListener
+EventListener <|.. LedgerListener
+EventListener <|.. LogListener
+
+OrderFacade --> EventBus : publish()
+EventBus --> EventListener : notify
+@enduml

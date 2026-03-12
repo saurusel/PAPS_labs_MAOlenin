@@ -1,0 +1,33 @@
+@startuml
+title GoF — Factory Method
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+interface TransitionStrategy {
+  +apply(order, targetStatus)
+}
+
+class ReviewTransitionStrategy
+class CompleteTransitionStrategy
+class CancelTransitionStrategy
+
+class TransitionStrategyFactory {
+  +create(targetStatus)
+}
+
+TransitionStrategy <|.. ReviewTransitionStrategy
+TransitionStrategy <|.. CompleteTransitionStrategy
+TransitionStrategy <|.. CancelTransitionStrategy
+
+TransitionStrategyFactory ..> ReviewTransitionStrategy : creates
+TransitionStrategyFactory ..> CompleteTransitionStrategy : creates
+TransitionStrategyFactory ..> CancelTransitionStrategy : creates
+@enduml

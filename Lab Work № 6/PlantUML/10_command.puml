@@ -1,0 +1,30 @@
+@startuml
+title GoF — Command
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+interface Command {
+  +execute()
+}
+
+class CreateOrderCommand
+class ChangeOrderStatusCommand
+class CancelOrderCommand
+class OrderFacade
+
+Command <|.. CreateOrderCommand
+Command <|.. ChangeOrderStatusCommand
+Command <|.. CancelOrderCommand
+
+OrderFacade --> CreateOrderCommand
+OrderFacade --> ChangeOrderStatusCommand
+OrderFacade --> CancelOrderCommand
+@enduml

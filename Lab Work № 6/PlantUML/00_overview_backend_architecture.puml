@@ -1,0 +1,83 @@
+@startuml
+title ЛР6 — Общая обзорная UML-диаграмма backend после рефакторинга
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+package "API" {
+  class ProductsApi
+  class OrdersApi
+}
+
+package "Services" {
+  class OrderServiceProxy
+  class LoggingOrderServiceDecorator
+  class OrderFacade
+  class CreateOrderCommand
+  class ChangeOrderStatusCommand
+  class CancelOrderCommand
+  class OrderBuilder
+  class OrderStateFactory
+  class TransitionStrategyFactory
+  class ValidationChain
+  class EventBus
+  class InventoryAdapter
+  class PointsAdapter
+}
+
+package "Repositories" {
+  interface RepositoryFactory
+  class SqlAlchemyRepositoryFactory
+  interface ProductRepository
+  interface OrderRepository
+  interface PointsRepository
+  interface LedgerRepository
+}
+
+package "Persistence" {
+  class Product
+  class Variant
+  class Order
+  class OrderItem
+  class UserPoints
+  class LedgerEntry
+}
+
+ProductsApi --> OrderServiceProxy : uses
+OrdersApi --> OrderServiceProxy : uses
+OrderServiceProxy --> LoggingOrderServiceDecorator
+LoggingOrderServiceDecorator --> OrderFacade
+
+OrderFacade --> ValidationChain
+OrderFacade --> CreateOrderCommand
+OrderFacade --> ChangeOrderStatusCommand
+OrderFacade --> CancelOrderCommand
+OrderFacade --> EventBus
+OrderFacade --> InventoryAdapter
+OrderFacade --> PointsAdapter
+OrderFacade --> RepositoryFactory
+
+CreateOrderCommand --> OrderBuilder
+ChangeOrderStatusCommand --> OrderStateFactory
+ChangeOrderStatusCommand --> TransitionStrategyFactory
+
+RepositoryFactory <|.. SqlAlchemyRepositoryFactory
+SqlAlchemyRepositoryFactory --> ProductRepository
+SqlAlchemyRepositoryFactory --> OrderRepository
+SqlAlchemyRepositoryFactory --> PointsRepository
+SqlAlchemyRepositoryFactory --> LedgerRepository
+
+ProductRepository --> Product
+ProductRepository --> Variant
+OrderRepository --> Order
+OrderRepository --> OrderItem
+PointsRepository --> UserPoints
+LedgerRepository --> LedgerEntry
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+title GoF — State
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+top to bottom direction
+
+abstract class OrderState {
+  +can_transition_to(targetStatus)
+}
+
+class NewOrderState
+class ReviewOrderState
+class AssemblyOrderState
+class ReadyOrderState
+class CompletedOrderState
+class CancelledOrderState
+class OrderStateFactory
+
+OrderState <|-- NewOrderState
+OrderState <|-- ReviewOrderState
+OrderState <|-- AssemblyOrderState
+OrderState <|-- ReadyOrderState
+OrderState <|-- CompletedOrderState
+OrderState <|-- CancelledOrderState
+
+OrderStateFactory ..> OrderState : returns
+@enduml

@@ -1,0 +1,29 @@
+@startuml
+title GoF — Adapter
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+interface InventoryPort {
+  +reserve(order)
+  +unreserve(order)
+  +deduct(order)
+}
+
+class InventoryAdapter
+class LegacyInventoryHelpers {
+  +reserve_for_order(order, db)
+  +unreserve_for_order(order, db)
+  +deduct_stock_on_complete(order, db)
+}
+
+InventoryPort <|.. InventoryAdapter
+InventoryAdapter --> LegacyInventoryHelpers : delegates
+@enduml

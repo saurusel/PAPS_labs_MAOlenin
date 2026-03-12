@@ -1,0 +1,42 @@
+@startuml
+title GoF — Abstract Factory
+' ЛР6 — GoF UML
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam packageStyle rectangle
+skinparam ArrowThickness 1
+skinparam RoundCorner 12
+skinparam defaultTextAlignment center
+hide empty members
+left to right direction
+
+interface RepositoryFactory {
+  +products()
+  +orders()
+  +points()
+  +ledger()
+}
+
+interface ProductRepository
+interface OrderRepository
+interface PointsRepository
+interface LedgerRepository
+
+class SqlAlchemyRepositoryFactory
+class SqlAlchemyProductRepository
+class SqlAlchemyOrderRepository
+class SqlAlchemyPointsRepository
+class SqlAlchemyLedgerRepository
+
+RepositoryFactory <|.. SqlAlchemyRepositoryFactory
+ProductRepository <|.. SqlAlchemyProductRepository
+OrderRepository <|.. SqlAlchemyOrderRepository
+PointsRepository <|.. SqlAlchemyPointsRepository
+LedgerRepository <|.. SqlAlchemyLedgerRepository
+
+SqlAlchemyRepositoryFactory ..> SqlAlchemyProductRepository : creates
+SqlAlchemyRepositoryFactory ..> SqlAlchemyOrderRepository : creates
+SqlAlchemyRepositoryFactory ..> SqlAlchemyPointsRepository : creates
+SqlAlchemyRepositoryFactory ..> SqlAlchemyLedgerRepository : creates
+@enduml
